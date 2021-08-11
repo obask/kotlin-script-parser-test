@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.analyzer.common.CommonPlatformAnalyzerServices
 import org.jetbrains.kotlin.analyzer.common.CommonResolverForModuleFactory
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.GroupingMessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -22,7 +21,6 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.container.tryGetService
 import org.jetbrains.kotlin.context.ProjectContext
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.TargetPlatform
@@ -30,13 +28,11 @@ import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.utils.PathUtil
 import java.io.File
-import java.util.*
 import java.util.logging.Logger
 
 class KotlinScriptParser {
     private class SourceModuleInfo(
             override val name: Name,
-            override val capabilities: Map<ModuleDescriptor.Capability<*>, Any?>,
             private val dependOnOldBuiltIns: Boolean,
             override val analyzerServices: PlatformDependentAnalyzerServices = CommonPlatformAnalyzerServices,
             override val platform: TargetPlatform = CommonPlatforms.defaultCommonPlatform
@@ -64,7 +60,7 @@ class KotlinScriptParser {
                 return hasErrors
             }
 
-            override fun report(severity: CompilerMessageSeverity, message: String, location: CompilerMessageLocation?) {
+            override fun report(severity: CompilerMessageSeverity, message: String, location: org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation?) {
                 val text = if (location != null) {
                     val path = location.path
                     val position = "$path: (${location.line}, ${location.column}) "
@@ -119,7 +115,7 @@ class KotlinScriptParser {
             val environment = KotlinCoreEnvironment.createForProduction(rootDisposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES)
             val ktFiles = environment.getSourceFiles()
 
-            val moduleInfo = SourceModuleInfo(Name.special("<main"), mapOf(), false)
+            val moduleInfo = SourceModuleInfo(Name.special("<main"), false)
             val project = ktFiles.firstOrNull()?.project ?: throw AssertionError("No files to analyze")
 
             val multiplatformLanguageSettings = object : LanguageVersionSettings by configuration.languageVersionSettings {
@@ -162,13 +158,13 @@ class KotlinScriptParser {
 
 
 fun main() {
-    val scriptFile = "/media/data/java/blackfern/kotlin-compile-test/test.kt"
+    val scriptFile = "/Users/baskakov/Downloads/kotlin-script-parser-test-master/test.kt"
 
     val parser = KotlinScriptParser()
-
     val analyzeContext = parser.parse(scriptFile)
 
     val function = analyzeContext.functions.keys.first()
     val body = function.bodyExpression as KtBlockExpression
-    val i = 0;
+    println(body)
+    println(body.psi)
 }
